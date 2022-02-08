@@ -1,4 +1,5 @@
 import os
+import time
 from hashlib import sha256
 from pathlib import Path
 
@@ -19,8 +20,18 @@ class CatPusherRemote:
     def local_files(cls):
         """Files to consider for processing."""
         min_size = int(cls.get_env("CPSH_MIN_SIZE"))
+        max_modified = time.time() - 60 * int(cls.get_env("CPSH_DELAY"))
         for filepath in Path(cls.get_env("CPSH_LOCAL")).glob("**/*"):
-            if not filepath.is_file() or filepath.stat().st_size < min_size:
+            if not filepath.is_file():
+                continue
+            stat = filepath.stat()
+            if stat.st_size < min_size:
+                print(f"{filepath} - too small")
+                continue
+            if stat.st_mtime > max_modified:
+                print(
+                    f"{filepath} - {(stat.st_mtime-max_modified)/60:0.1f} min. too new"
+                )
                 continue
             yield filepath
 

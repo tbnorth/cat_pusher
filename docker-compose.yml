@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  cat_pusher:
+    deploy:
+      restart_policy:
+        condition: any
+    env_file: .env
+    user: ${CPSH_UID-0}
+    build:
+      context: .
+    volumes:
+      - type: bind
+        source: ${CPSH_LOCAL}
+        target: ${CPSH_LOCAL}
+
+

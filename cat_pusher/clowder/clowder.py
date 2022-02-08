@@ -26,7 +26,6 @@ class ClowderRemote(CatPusherRemote):
         return self.remote_spec.path / self.relative_path(frompath) / frompath.name
 
     def copy_file(self, frompath: Path):
-        return
         pyclowder.files.upload_to_dataset(
             connector=self.connector,
             datasetid=self.path["dataset_id"],
@@ -47,8 +46,12 @@ class ClowderRemote(CatPusherRemote):
         response.raise_for_status()
         hits = [i for i in response.json() if i["filename"] == frompath.name]
         if len(hits) != 1:
+            print(hits)
             return False
         return hits[0]["id"]
+
+    def file_exists(self, frompath: Path) -> bool:
+        return self.file_id(frompath) is not False
 
     def verify_file(self, frompath: Path) -> bool:
         params = {"key": self.remote_spec.username}
