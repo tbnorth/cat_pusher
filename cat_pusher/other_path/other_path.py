@@ -1,5 +1,4 @@
 import shutil
-from hashlib import sha256
 from pathlib import Path
 
 from cat_pusher import CatPusherRemote
@@ -19,14 +18,7 @@ class OtherPath(CatPusherRemote):
         shutil.copy(frompath, dest)
 
     def verify_file(self, frompath: Path):
-        hashes = []
-        for path in frompath, self.dest_path(frompath):
-            h256 = sha256()
-            with path.open("rb") as in_:
-                while len(data := in_.read(10_000_000)) > 0:
-                    h256.update(data)
-            hashes.append(h256.hexdigest())
-        return hashes[0] == hashes[1]
+        return self.hash_file(frompath) == self.hash_file(self.dest_path(frompath))
 
 
 cp_remote = OtherPath

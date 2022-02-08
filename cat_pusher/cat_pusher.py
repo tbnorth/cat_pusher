@@ -1,4 +1,5 @@
 import os
+from hashlib import sha256
 from pathlib import Path
 
 
@@ -22,3 +23,14 @@ class CatPusherRemote:
             if not filepath.is_file() or filepath.stat().st_size < min_size:
                 continue
             yield filepath
+
+    @staticmethod
+    def hash_file(frompath: Path, hash=None):
+        if hash is None:
+            hash = sha256()
+        else:
+            hash = hash()
+        with frompath.open("rb") as in_:
+            while len(data := in_.read(10_000_000)) > 0:
+                hash.update(data)
+        return hash.hexdigest()
