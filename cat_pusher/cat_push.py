@@ -10,9 +10,10 @@ def check() -> None:
     copied = 0
     deleted = 0
     for filepath in remote.local_files():
+        print(time.asctime())
         print(filepath)
-        print(remote.dest_path(filepath))
         if not remote.file_exists(filepath):
+            print(f"Copying {filepath.stat().st_size:,} to remote.")
             remote.copy_file(filepath)
             copied += 1
             time.sleep(5)  # let remote catch up
@@ -28,5 +29,6 @@ def check() -> None:
 
 while True:
     check()
+    print(time.asctime())
     print("Sleeping", remote.get_env("CPSH_INTERVAL"), "minutes")
     time.sleep(60 * int(remote.get_env("CPSH_INTERVAL")))

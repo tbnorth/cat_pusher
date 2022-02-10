@@ -13,7 +13,9 @@ class ClowderRemote(CatPusherRemote):
         super().__init__()
         self.remote_spec = urlparse(self.get_env("CPSH_REMOTE"))
         assert self.remote_spec.scheme == "clowder"
-        self.connector = pyclowder.connectors.Connector(None, None)
+        self.connector = pyclowder.connectors.Connector(
+            None, None, max_retry=int(self.get_env("CPSH_RETRY", 10))
+        )
         self.path = dict(
             host="https://" + self.remote_spec.hostname + "/",
             key=self.remote_spec.username,
@@ -35,7 +37,7 @@ class ClowderRemote(CatPusherRemote):
             key=self.path["key"],
         )
 
-    def file_id(self, frompath: Path) -> str:
+    def file_ids_list(self, frompath: Path) -> list[str]:
         params = {"key": self.remote_spec.username}
         url = (
             f'{self.path["host"]}'
@@ -44,14 +46,18 @@ class ClowderRemote(CatPusherRemote):
 
         response = requests.get(url, params=params)
         response.raise_for_status()
-        hits = [i for i in response.json() if i["filename"] == frompath.name]
+        return [i for i in response.json() if i["filename"] == frompath.name]
+
+    def file_id(self, frompath: Path) -> str:
+        hits = self.file_ids_list(frompath)
         if len(hits) != 1:
-            print(hits)
+            if len(hits) > 1:
+                print(hits)
             return False
         return hits[0]["id"]
 
     def file_exists(self, frompath: Path) -> bool:
-        return self.file_id(frompath) is not False
+        return len(self.file_ids_list(frompath)) > 0
 
     def verify_file(self, frompath: Path) -> bool:
         params = {"key": self.remote_spec.username}
