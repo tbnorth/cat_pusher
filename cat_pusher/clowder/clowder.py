@@ -37,16 +37,18 @@ class ClowderRemote(CatPusherRemote):
             key=self.path["key"],
         )
 
-    def file_ids_list(self, frompath: Path) -> list[str]:
-        params = {"key": self.remote_spec.username}
-        url = (
-            f'{self.path["host"]}'
-            f'api/datasets/{self.path["dataset_id"]}/listAllFiles'
+    def file_ids_list(self, frompath: Path) -> list:
+        params = dict(
+            key=self.path["key"],
+            resource_type="file",
+            datasetid=self.path["dataset_id"],
+            query=f"name=={frompath.name}",
         )
+        url = self.path["host"] + "api/search"
 
         response = requests.get(url, params=params)
         response.raise_for_status()
-        return [i for i in response.json() if i["filename"] == frompath.name]
+        return [i for i in response.json()["results"] if i["name"] == frompath.name]
 
     def file_id(self, frompath: Path) -> str:
         hits = self.file_ids_list(frompath)
@@ -60,11 +62,17 @@ class ClowderRemote(CatPusherRemote):
         return len(self.file_ids_list(frompath)) > 0
 
     def verify_file(self, frompath: Path) -> bool:
-        params = {"key": self.remote_spec.username}
         file_id = self.file_id(frompath)
+        if not file_id:
+            return False
+        params = {"key": self.path["key"]}
         url = f'{self.path["host"]}' f"api/files/{file_id}/metadata.jsonld"
         response = requests.get(url, params=params)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except Exception:
+            print(url)
+            raise
         metas = [
             i
             for i in response.json()

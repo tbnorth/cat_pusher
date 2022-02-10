@@ -13,8 +13,12 @@ def check() -> None:
         print(time.asctime())
         print(filepath)
         if not remote.file_exists(filepath):
-            print(f"Copying {filepath.stat().st_size:,} to remote.")
+            size = filepath.stat().st_size
+            print(f"Copying {size:,} to remote.")
+            start = time.time()
             remote.copy_file(filepath)
+            duration = time.time() - start
+            print(f"{duration:.2f} seconds, {size / duration:,.0f} per second.")
             copied += 1
             time.sleep(5)  # let remote catch up
         verified = remote.verify_file(filepath)
@@ -27,8 +31,9 @@ def check() -> None:
     print(f"Copied {copied}, deleted {deleted}")
 
 
+print("=" * 20, "Start run", "=" * 20)
 while True:
     check()
     print(time.asctime())
-    print("Sleeping", remote.get_env("CPSH_INTERVAL"), "minutes")
+    print("-" * 20, "Sleeping", remote.get_env("CPSH_INTERVAL"), "minutes", "-" * 20)
     time.sleep(60 * int(remote.get_env("CPSH_INTERVAL")))
