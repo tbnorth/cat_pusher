@@ -37,20 +37,20 @@ class ClowderRemote(CatPusherRemote):
             key=self.path["key"],
         )
 
-    def file_ids_list(self, frompath: Path) -> list:
+    def file_ids_list(self, frompath: str) -> list:
         params = dict(
             key=self.path["key"],
             resource_type="file",
             datasetid=self.path["dataset_id"],
-            query=f"name=={frompath.name}",
+            query=f"name=={frompath}",
         )
         url = self.path["host"] + "api/search"
 
         response = requests.get(url, params=params)
         response.raise_for_status()
-        return [i for i in response.json()["results"] if i["name"] == frompath.name]
+        return [i for i in response.json()["results"] if i["name"] == frompath]
 
-    def file_id(self, frompath: Path) -> str:
+    def file_id(self, frompath: str) -> str:
         hits = self.file_ids_list(frompath)
         if len(hits) != 1:
             if len(hits) > 1:
@@ -62,7 +62,7 @@ class ClowderRemote(CatPusherRemote):
         return len(self.file_ids_list(frompath)) > 0
 
     def verify_file(self, frompath: Path) -> bool:
-        file_id = self.file_id(frompath)
+        file_id = self.file_id(frompath.name)
         if not file_id:
             return False
         params = {"key": self.path["key"]}
