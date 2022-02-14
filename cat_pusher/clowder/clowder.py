@@ -62,25 +62,37 @@ class ClowderRemote(CatPusherRemote):
         return len(self.file_ids_list(frompath)) > 0
 
     def verify_file(self, frompath: Path) -> bool:
-        file_id = self.file_id(frompath.name)
-        if not file_id:
+        """Sometimes multiple copies on server, so return True if ALL copies have same
+        hash, checking *carefully*.
+        """
+        file_ids = self.file_ids_list(frompath.name)
+        if not file_ids:
             return False
-        params = {"key": self.path["key"]}
-        url = f'{self.path["host"]}' f"api/files/{file_id}/metadata.jsonld"
-        response = requests.get(url, params=params)
-        try:
-            response.raise_for_status()
-        except Exception:
-            print(url)
-            raise
-        metas = [
-            i
-            for i in response.json()
-            if i.get("agent", {}).get("name", "").endswith("ncsa.file.digest")
-        ]
-        if len(metas) != 1:
-            return False
-        return self.hash_file(frompath) == metas[0]["content"]["sha256"]
+        true = 0
+        for file_id in file_ids:
+            file_id = file_id["id"]
+            params = {"key": self.path["key"]}
+            url = f'{self.path["host"]}' f"api/files/{file_id}/metadata.jsonld"
+            response = requests.get(url, params=params)
+            try:
+                response.raise_for_status()
+            except Exception:
+                print(url)
+                raise
+            metas = [
+                i
+                for i in response.json()
+                if i.get("agent", {}).get("name", "").endswith("ncsa.file.digest")
+            ]
+            if len(metas) != 1:
+                print("Found multiple metas.")
+                return False
+            if self.hash_file(frompath) != metas[0]["content"]["sha256"]:
+                return False
+            else:
+                true += 1
+
+        return true == len(file_ids)  # can't be otherwise but paranoid
 
 
 cp_remote = ClowderRemote
