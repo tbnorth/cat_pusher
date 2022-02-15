@@ -9,6 +9,16 @@ remote = importlib.import_module(f"{remote}.{remote}").cp_remote()
 def check() -> None:
     copied = 0
     deleted = 0
+    # Check for deletions first, to clean up folder on resume.
+    for filepath in remote.local_files():
+        verified = remote.verify_file(filepath)
+        if verified and remote.get_env("CPSH_DELETE") == "Y":
+            print(f"Verified remote {filepath}, deleting local")
+            filepath.unlink()
+            deleted += 1
+        else:
+            print("Not verified.")
+    # Then copy files to remote.
     for filepath in remote.local_files():
         print(time.asctime())
         print(filepath)
@@ -20,14 +30,6 @@ def check() -> None:
             duration = time.time() - start
             print(f"{duration:.2f} seconds, {size / duration:,.0f} per second.")
             copied += 1
-            time.sleep(5)  # let remote catch up
-        verified = remote.verify_file(filepath)
-        if verified and remote.get_env("CPSH_DELETE") == "Y":
-            print(f"Verified remote {filepath}, deleting local")
-            filepath.unlink()
-            deleted += 1
-        else:
-            print("Not verified.")
     print(f"Copied {copied}, deleted {deleted}")
 
 

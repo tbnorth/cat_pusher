@@ -7,7 +7,7 @@ import requests
 from clowder import ClowderRemote
 
 renames = [
-    ["old_name", "new_name"],
+    # ["old_name", "new_name"],
 ]
 
 remote = ClowderRemote()
@@ -25,5 +25,8 @@ for from_, to in renames:
 url = remote.path["host"] + "api/datasets/%s/listAllFiles" % remote.path["dataset_id"]
 params = dict(key=remote.path["key"])
 response = requests.get(url, params=params)
+bytes = 0  # show total bytes too
 for result in response.json():
     print(f"[\"{result['filename']}\", \"{result['filename']}\"],")
+    bytes += int(result["size"])
+print(f"# {bytes:,}")
