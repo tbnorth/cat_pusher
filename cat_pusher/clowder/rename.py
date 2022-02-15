@@ -1,18 +1,19 @@
 """
 List all the names in a dataset as
-  ["name", "name"],
+  ["name", "name", size],
 paste into renames list and edit second name to perform renaming.
+size is just informational.
 """
 import requests
 from clowder import ClowderRemote
 
 renames = [
-    # ["old_name", "new_name"],
+    # ["old_name", "new_name"], 0,
 ]
 
 remote = ClowderRemote()
 
-for from_, to in renames:
+for from_, to, _ in renames:
     file_id = remote.file_id(from_)
     if not file_id:
         continue
@@ -27,6 +28,6 @@ params = dict(key=remote.path["key"])
 response = requests.get(url, params=params)
 bytes = 0  # show total bytes too
 for result in response.json():
-    print(f"[\"{result['filename']}\", \"{result['filename']}\"],")
+    print(f"[\"{result['filename']}\", \"{result['filename']}\", {result['size']}],")
     bytes += int(result["size"])
 print(f"# {bytes:,}")
