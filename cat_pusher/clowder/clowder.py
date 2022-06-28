@@ -89,6 +89,9 @@ class ClowderRemote(CatPusherRemote):
             except Exception:
                 print(url)
                 raise
+            # (frompath.parent / "hash" / frompath.name).with_suffix(".json")
+            # .write_text(     json.dumps(response.json(), indent=4)
+            # )
             metas = [
                 i
                 for i in response.json()
