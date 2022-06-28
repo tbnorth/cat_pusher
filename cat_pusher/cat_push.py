@@ -10,18 +10,25 @@ def check() -> None:
     copied = 0
     deleted = 0
     # Check for deletions first, to clean up folder on resume.
+    skip = set()
     for filepath in remote.local_files():
-        verified = remote.verify_file(filepath)
-        if verified and remote.get_env("CPSH_DELETE") == "Y":
-            print(f"Verified remote {filepath}, deleting local")
-            filepath.unlink()
-            deleted += 1
-        else:
-            print("Not verified.")
+        try:
+            verified = remote.verify_file(filepath)
+            if verified and remote.get_env("CPSH_DELETE") == "Y":
+                print(f"Verified remote {filepath}, deleting local")
+                filepath.unlink()
+                deleted += 1
+            else:
+                print("Not verified.")
+        except remote.NoMetaDataError:
+            skip.add(filepath)
     # Then copy files to remote.
     for filepath in remote.local_files():
         print(time.asctime())
         print(filepath)
+        if filepath in skip:
+            print(f"Skipping {filepath}")
+            continue
         if not remote.file_exists(filepath):
             size = filepath.stat().st_size
             print(f"Copying {size:,} to remote.")

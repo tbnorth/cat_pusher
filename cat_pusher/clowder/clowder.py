@@ -69,11 +69,16 @@ class ClowderRemote(CatPusherRemote):
     def verify_file(self, frompath: Path) -> bool:
         """Sometimes multiple copies on server, so return True if ALL copies have same
         hash, checking *carefully*.
+
+        UPDATE: now just return True if one matches, but store correct hashes locally
         """
         file_ids = self.file_ids_list(frompath.name)
         if not file_ids:
             return False
         true = 0
+        local_hash = self.hash_file(frompath)
+        (frompath.parent / "hash" / frompath.name).write_text(local_hash)
+        no_meta = False
         for file_id in file_ids:
             file_id = file_id["id"]
             params = {"key": self.path["key"]}
@@ -89,15 +94,25 @@ class ClowderRemote(CatPusherRemote):
                 for i in response.json()
                 if i.get("agent", {}).get("name", "").endswith("ncsa.file.digest")
             ]
+            if len(metas) == 0:
+                print(f"Found NO metas: {frompath}")
+                no_meta = True
             if len(metas) != 1:
-                print("Found multiple metas.")
-                return False
-            if self.hash_file(frompath) != metas[0]["content"]["sha256"]:
-                return False
-            else:
+                print(f"Found multiple metas: {frompath}")
+            if any(i["content"]["sha256"] == local_hash for i in metas):
                 true += 1
+                print(f"Found match: {frompath}")
+            else:
+                print(f"NO match: {frompath}")
+            # if self.hash_file(frompath) != metas[0]["content"]["sha256"]:
+            #     return False
+            # else:
+            #     true += 1
 
-        return true == len(file_ids)  # can't be otherwise but paranoid
+        if true == 0 and no_meta:
+            raise self.NoMetaDataError
+
+        return true > 0
 
 
 cp_remote = ClowderRemote
