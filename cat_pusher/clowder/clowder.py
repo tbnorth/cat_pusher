@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -47,8 +48,12 @@ class ClowderRemote(CatPusherRemote):
         url = self.path["host"] + "api/search"
 
         response = requests.get(url, params=params)
-        response.raise_for_status()
-        return [i for i in response.json()["results"] if i["name"] == frompath]
+
+        if response.ok:
+            return [i for i in response.json()["results"] if i["name"] == frompath]
+        print("Response not ok, sleeping 1 min.")
+        time.sleep(60)
+        return []
 
     def file_id(self, frompath: str) -> str:
         hits = self.file_ids_list(frompath)
