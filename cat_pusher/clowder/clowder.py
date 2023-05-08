@@ -5,8 +5,11 @@ from urllib.parse import urlparse
 import pyclowder.connectors
 import pyclowder.files
 import requests
+from dotenv import load_dotenv
 
 from cat_pusher import CatPusherRemote
+
+load_dotenv()
 
 
 class ClowderRemote(CatPusherRemote):

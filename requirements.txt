@@ -1,1 +1,2 @@
 git+https://github.com/tbnorth/pyclowder.git@upload_to_folder
+python-dotenv
