@@ -101,15 +101,15 @@ class ClowderRemote(CatPusherRemote):
                 if i.get("agent", {}).get("name", "").endswith("ncsa.file.digest")
             ]
             if len(metas) == 0:
-                print(f"Found NO metas: {frompath}")
+                print(f"Found NO metas: {frompath} - {file_id}")
                 no_meta = True
             if len(metas) != 1:
-                print(f"Found multiple metas: {frompath}")
+                print(f"Found multiple metas: {frompath} - {file_id}")
             if any(i["content"]["sha256"] == local_hash for i in metas):
                 true += 1
-                print(f"Found match: {frompath}")
+                print(f"Found match: {frompath} - {file_id}")
             else:
-                print(f"NO match: {frompath}")
+                print(f"NO match: {frompath} - {file_id}")
             # if self.hash_file(frompath) != metas[0]["content"]["sha256"]:
             #     return False
             # else:
