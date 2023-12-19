@@ -1,0 +1,5 @@
+* { font-family: sans-serif;
+  }
+table.year > tbody > tr { vertical-align: top
+}
+td { width: 4ex; height: 3ex; }
