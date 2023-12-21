@@ -27,7 +27,8 @@ url = remote.path["host"] + "api/datasets/%s/listAllFiles" % remote.path["datase
 params = dict(key=remote.path["key"])
 response = requests.get(url, params=params)
 bytes = 0  # show total bytes too
-for result in response.json():
+results = response.json()
+for result in results:
     print(
         f"[\"{result['filename']}\", \"{result['filename']}\", {result['size']}, "
         f"\"{result['date-created']}\", \"{result['id']}\"]"
